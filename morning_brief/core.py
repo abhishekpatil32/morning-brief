@@ -117,7 +117,6 @@ def run_claude_code(cfg: Config, prompt: str) -> str:
         [
             "claude", "-p", prompt,
             "--allowedTools", "WebSearch,WebFetch",
-            "--dangerously-skip-permissions",
             "--output-format", "text",
             "--model", cfg.model,
         ],
