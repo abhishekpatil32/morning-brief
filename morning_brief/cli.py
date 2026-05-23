@@ -96,7 +96,7 @@ def run(config_path: Path | None, dry_run: bool) -> None:
     console.print(f"[dim]Using config:[/dim] {cfg.config_path}")
     console.print(f"[dim]Backend:[/dim] {cfg.backend}  [dim]Model:[/dim] {cfg.model}")
 
-    console.print("[bold]Generating digest...[/bold] (this can take 1-3 minutes)")
+    console.print("[bold]Generating digest...[/bold] (this can take a few minutes)")
     digest = generate_digest(cfg)
     if not digest.strip():
         console.print("[red]Error:[/red] Claude returned an empty digest.")

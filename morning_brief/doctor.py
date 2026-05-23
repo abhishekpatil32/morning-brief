@@ -58,13 +58,15 @@ def run_doctor(config_path: Path | None = None) -> int:
         return 1
 
     backend = raw.get("backend", "api")
+    provider = raw.get("provider") or ("claude-code" if backend == "claude-code" else "anthropic")
     model = raw.get("model", "(not set)")
     topic = (raw.get("topic") or {}).get("name", "(not set)")
 
     console.print("\n[bold]Config[/bold]")
-    console.print(f"  backend: {backend}")
-    console.print(f"  model:   {model}")
-    console.print(f"  topic:   {topic}")
+    console.print(f"  backend:  {backend}")
+    console.print(f"  provider: {provider}")
+    console.print(f"  model:    {model}")
+    console.print(f"  topic:    {topic}")
 
     env_path = resolved.parent / ".env"
     if env_path.exists():
@@ -73,16 +75,49 @@ def run_doctor(config_path: Path | None = None) -> int:
     else:
         _warn(".env not found:", str(env_path))
 
-    console.print("\n[bold]Credentials[/bold]")
-
-    required = []
-    if backend == "api":
-        required.append("ANTHROPIC_API_KEY")
-
-    required.extend(["EMAIL_SENDER", "EMAIL_APP_PASSWORD", "EMAIL_RECIPIENT"])
+    console.print("\n[bold]Provider credentials[/bold]")
 
     problems = 0
-    for key in required:
+
+    if backend == "api" and provider == "anthropic":
+        value = os.environ.get("ANTHROPIC_API_KEY", "")
+        if value:
+            _ok("ANTHROPIC_API_KEY set:", _mask(value))
+        else:
+            _fail("ANTHROPIC_API_KEY missing")
+            problems += 1
+
+    elif backend == "api" and provider == "openai-compatible":
+        value = os.environ.get("OPENAI_API_KEY", "")
+        if value:
+            _ok("OPENAI_API_KEY set:", _mask(value))
+        else:
+            _fail("OPENAI_API_KEY missing")
+            problems += 1
+
+        _ok("OPENAI_BASE_URL:", os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"))
+
+    elif backend == "api" and provider == "ollama":
+        _ok("OLLAMA_BASE_URL:", os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434"))
+        if shutil.which("ollama"):
+            _ok("Ollama CLI found")
+        else:
+            _warn("Ollama CLI not found on PATH")
+
+    elif backend == "claude-code":
+        if shutil.which("claude"):
+            _ok("Claude Code CLI found")
+        else:
+            _fail("Claude Code CLI not found on PATH")
+            problems += 1
+
+    else:
+        _fail("Unknown backend/provider:", f"{backend}/{provider}")
+        problems += 1
+
+    console.print("\n[bold]Email credentials[/bold]")
+
+    for key in ["EMAIL_SENDER", "EMAIL_APP_PASSWORD", "EMAIL_RECIPIENT"]:
         value = os.environ.get(key, "")
         if value:
             _ok(f"{key} set:", _mask(value))
@@ -90,24 +125,8 @@ def run_doctor(config_path: Path | None = None) -> int:
             _fail(f"{key} missing")
             problems += 1
 
-    smtp_server = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
-    smtp_port = os.environ.get("SMTP_PORT", "587")
-    _ok("SMTP_SERVER:", smtp_server)
-    _ok("SMTP_PORT:", smtp_port)
-
-    console.print("\n[bold]Backend checks[/bold]")
-
-    if backend == "claude-code":
-        if shutil.which("claude"):
-            _ok("Claude Code CLI found")
-        else:
-            _fail("Claude Code CLI not found on PATH")
-            problems += 1
-    elif backend == "api":
-        _ok("API backend selected")
-    else:
-        _fail("Unknown backend:", str(backend))
-        problems += 1
+    _ok("SMTP_SERVER:", os.environ.get("SMTP_SERVER", "smtp.gmail.com"))
+    _ok("SMTP_PORT:", os.environ.get("SMTP_PORT", "587"))
 
     console.print("")
     if problems:

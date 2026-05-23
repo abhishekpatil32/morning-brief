@@ -3,14 +3,30 @@
 # Copy this file to `config.yaml` and edit. The CLI looks for config.yaml in
 # the current directory, then ~/.config/morning-brief/config.yaml.
 
-# ----- How morning-brief talks to Claude -----
-# "api"         -- uses the Anthropic API directly (requires ANTHROPIC_API_KEY)
-# "claude-code" -- shells out to the `claude` CLI you have installed locally
+# ----- Backend and LLM provider -----
+# backend:
+#   "api"         -- recommended for scheduled/unattended use
+#   "claude-code" -- experimental; shells out to the local Claude Code CLI
 backend: api
 
-# Model identifier. Used by both backends.
-# Common choices: claude-sonnet-4-6, claude-opus-4-7, claude-haiku-4-5
+# provider:
+#   "anthropic"          -- uses ANTHROPIC_API_KEY; supports Claude web search in this project
+#   "openai-compatible" -- uses OPENAI_API_KEY + OPENAI_BASE_URL
+#   "ollama"             -- local Ollama, usually no API key
+#   "claude-code"        -- used automatically when backend=claude-code
+provider: anthropic
+
+# Model identifier for the chosen provider.
+#
+# Examples:
+#   Anthropic:          claude-sonnet-4-6
+#   OpenAI:             gpt-4o-mini
+#   OpenRouter/Groq/etc: provider-specific model id
+#   Ollama:             llama3.1:8b
 model: claude-sonnet-4-6
+
+runtime:
+  timeout_seconds: 600
 
 # ----- The topic of the digest -----
 topic:
@@ -62,4 +78,4 @@ email:
   # Header tagline shown above the title in the HTML email
   tagline: "Daily Research Brief"
   # Footer line below the entries
-  footer: "Curated by Claude · Powered by morning-brief"
+  footer: "Curated by AI · Powered by morning-brief"

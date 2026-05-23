@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "morning-brief"
 version = "0.1.0"
-description = "A configurable daily research digest delivered to your inbox, powered by Claude."
+description = "A configurable local-first AI research/news digest delivered to your inbox."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.9"
 authors = [
     { name = "Abhishek Patil" },
 ]
-keywords = ["claude", "anthropic", "research", "digest", "newsletter", "ai", "neuroscience", "arxiv"]
+keywords = ["research", "digest", "newsletter", "ai", "llm", "arxiv", "pubmed", "automation"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
