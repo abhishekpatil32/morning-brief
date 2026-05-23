@@ -113,7 +113,7 @@ def load_env_file(env_path: Path) -> None:
         os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
-def load_config(explicit: Optional[Path] = None) -> Config:
+def load_config(explicit: Optional[Path] = None, require_email: bool = True) -> Config:
     config_path = resolve_config_path(explicit)
     config_dir = config_path.parent
     load_env_file(config_dir / ".env")
@@ -158,13 +158,14 @@ def load_config(explicit: Optional[Path] = None) -> Config:
     missing = []
     if cfg.backend == "api" and not cfg.env.anthropic_api_key:
         missing.append("ANTHROPIC_API_KEY (required because backend=api)")
-    for key, val in [
-        ("EMAIL_SENDER", cfg.env.email_sender),
-        ("EMAIL_APP_PASSWORD", cfg.env.email_app_password),
-        ("EMAIL_RECIPIENT", cfg.env.email_recipient),
-    ]:
-        if not val:
-            missing.append(key)
+    if require_email:
+        for key, val in [
+            ("EMAIL_SENDER", cfg.env.email_sender),
+            ("EMAIL_APP_PASSWORD", cfg.env.email_app_password),
+            ("EMAIL_RECIPIENT", cfg.env.email_recipient),
+        ]:
+            if not val:
+                missing.append(key)
     if missing:
         raise ValueError(
             "Missing required environment variables:\n  - "

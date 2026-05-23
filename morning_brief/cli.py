@@ -35,9 +35,9 @@ def _copy_package_data_file(resource_name: str, target: Path) -> None:
     with as_file(resource) as src:
         shutil.copy(src, target)
 
-def _load(config_path: Optional[Path]) -> Config:
+def _load(config_path: Optional[Path], require_email: bool = True) -> Config:
     try:
-        return load_config(config_path)
+        return load_config(config_path, require_email=require_email)
     except (FileNotFoundError, ValueError) as e:
         console.print(f"[red]Error:[/red] {e}")
         sys.exit(1)
