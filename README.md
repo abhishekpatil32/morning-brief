@@ -44,28 +44,30 @@ coffee.
 
 ## Quick start
 
+`morning-brief` works with your existing Claude Code subscription — no 
+Anthropic API credits required.
+
 ```bash
-# 1. Install
-git clone https://github.com/abhishek-patil/morning-brief.git
+# 1. Install Claude Code (free, only needed once)
+npm install -g @anthropic-ai/claude-code
+claude login
+
+# 2. Install morning-brief
+git clone https://github.com/PATIL-Abhishek/morning-brief.git
 cd morning-brief
 python3 -m venv .venv
-source .venv/bin/activate  
+source .venv/bin/activate
 pip install -e .
 
-# 2. Set up config in your home directory (or wherever you like)
-mkdir -p ~/.config/morning-brief
-cd ~/.config/morning-brief
+# 3. Set up config
 morning-brief init
+$EDITOR .env          # add your Gmail address + app password (no API key 
+needed)
+$EDITOR config.yaml   # customize the topic if you want
 
-# 3. Edit config.yaml and .env with your details
-$EDITOR config.yaml         # customize the topic
-$EDITOR .env                # add your Anthropic API key + Gmail app password
-
-# 4. Smoke-test the mailer
-morning-brief test-email
-
-# 5. Send your first real digest
-morning-brief run
+# 4. Send your first digest
+morning-brief test-email    # confirm SMTP works
+morning-brief run           # the real thing
 ```
 
 ## Configuration

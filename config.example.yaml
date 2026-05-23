@@ -6,7 +6,7 @@
 # ----- How morning-brief talks to Claude -----
 # "api"         -- uses the Anthropic API directly (requires ANTHROPIC_API_KEY)
 # "claude-code" -- shells out to the `claude` CLI you have installed locally
-backend: api
+backend: claude-code
 
 # Model identifier. Used by both backends.
 # Common choices: claude-sonnet-4-6, claude-opus-4-7, claude-haiku-4-5
