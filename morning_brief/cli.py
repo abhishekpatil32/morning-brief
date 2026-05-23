@@ -135,7 +135,7 @@ def test_email(config_path: Optional[Path]) -> None:
         f"{cfg.topic.name.upper()} DIGEST -- TEST\n"
         "============================================================\n\n"
         "1. Test Entry: morning-brief SMTP smoke test\n"
-        "   https://github.com/abhishek-patil/morning-brief\n"
+        "   https://github.com/abhishekpatil32/morning-brief\n"
         "   If you can read this in your inbox, your SMTP credentials work correctly.\n"
         "   The HTML version of this message demonstrates the rendered layout.\n"
     )
