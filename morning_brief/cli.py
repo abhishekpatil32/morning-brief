@@ -23,6 +23,7 @@ from .config import CONFIG_SEARCH_PATHS, Config, load_config
 from .core import generate_digest, parse_digest, urls_in
 from .dedup import load_seen, record
 from .email_sender import send
+from .doctor import run_doctor
 from importlib.resources import as_file, files
 
 
@@ -178,6 +179,14 @@ def where() -> None:
     for p in CONFIG_SEARCH_PATHS:
         marker = "[green]exists[/green]" if p.exists() else "[dim]not found[/dim]"
         console.print(f"  {p}  {marker}")
+
+
+
+@main.command()
+@click.option("--config", "config_path", type=click.Path(exists=True, path_type=Path))
+def doctor(config_path: Optional[Path]) -> None:
+    """Check config, credentials, backend, and local setup."""
+    raise SystemExit(run_doctor(config_path))
 
 
 if __name__ == "__main__":
