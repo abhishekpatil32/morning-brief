@@ -7,7 +7,7 @@ quickly.
 ## Setup
 
 ```bash
-git clone https://github.com/abhishek-patil/morning-brief.git
+git clone https://github.com/abhishekpatil32/morning-brief.git
 cd morning-brief
 python -m venv .venv
 source .venv/bin/activate
