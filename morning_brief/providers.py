@@ -25,7 +25,7 @@ def generate_with_provider(cfg: Config, prompt: str) -> str:
     if cfg.provider == "claude-code":
         return run_claude_code(cfg, prompt)
 
-    raise ValueError(f"unknown provider: {cfg.provider}")
+    raise ValueError(f"Unknown provider: {cfg.provider}")
 
 
 def run_anthropic_api(cfg: Config, prompt: str) -> str:
@@ -50,20 +50,7 @@ def run_anthropic_api(cfg: Config, prompt: str) -> str:
 
 
 def run_openai_compatible(cfg: Config, prompt: str) -> str:
-    """Call an OpenAI-compatible /v1/chat/completions endpoint.
-
-    This works for OpenAI and many OpenAI-compatible providers if the user sets:
-      OPENAI_API_KEY
-      OPENAI_BASE_URL
-
-    Examples of base URLs:
-      https://api.openai.com/v1
-      https://openrouter.ai/api/v1
-      https://api.groq.com/openai/v1
-      https://api.deepseek.com/v1
-      https://api.cerebras.ai/v1
-      https://generativelanguage.googleapis.com/v1beta/openai
-    """
+    """Call an OpenAI-compatible /v1/chat/completions endpoint."""
     if not cfg.env.openai_api_key:
         raise RuntimeError("OPENAI_API_KEY is required when provider=openai-compatible")
 
@@ -111,9 +98,7 @@ def run_ollama(cfg: Config, prompt: str) -> str:
         "model": cfg.model,
         "prompt": prompt,
         "stream": False,
-        "options": {
-            "temperature": 0.2,
-        },
+        "options": {"temperature": 0.2},
     }
 
     data = _post_json(
@@ -130,7 +115,7 @@ def run_ollama(cfg: Config, prompt: str) -> str:
 
 
 def run_claude_code(cfg: Config, prompt: str) -> str:
-    """Shell out to the local `claude` CLI in headless mode."""
+    """Shell out to the local Claude Code CLI."""
     if not _which("claude"):
         raise RuntimeError(
             "`claude` CLI not found on PATH. Install Claude Code first, "
