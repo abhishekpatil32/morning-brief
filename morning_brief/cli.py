@@ -23,9 +23,17 @@ from .config import CONFIG_SEARCH_PATHS, Config, load_config
 from .core import generate_digest, parse_digest, urls_in
 from .dedup import load_seen, record
 from .email_sender import send
+from importlib.resources import as_file, files
+
+
 
 console = Console()
 
+def _copy_package_data_file(resource_name: str, target: Path) -> None:
+    """Copy a packaged template/config file to a user-visible path."""
+    resource = files("morning_brief").joinpath("data", resource_name)
+    with as_file(resource) as src:
+        shutil.copy(src, target)
 
 def _load(config_path: Optional[Path]) -> Config:
     try:
@@ -60,13 +68,13 @@ def init(target: Optional[Path]) -> None:
     if target_config.exists():
         console.print(f"[yellow]Skipping[/yellow] {target_config} (already exists).")
     else:
-        shutil.copy(src_config, target_config)
+        _copy_package_data_file("config.example.yaml", target_config)
         console.print(f"[green]Created[/green] {target_config}")
 
     if target_env.exists():
         console.print(f"[yellow]Skipping[/yellow] {target_env} (already exists).")
     else:
-        shutil.copy(src_env, target_env)
+        _copy_package_data_file("env.example", target_env)
         target_env.chmod(0o600)
         console.print(f"[green]Created[/green] {target_env} (mode 600)")
 

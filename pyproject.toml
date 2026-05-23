@@ -56,7 +56,7 @@ morning-brief = "morning_brief.cli:main"
 include = ["morning_brief*"]
 
 [tool.setuptools.package-data]
-morning_brief = ["templates/*.j2"]
+morning_brief = ["templates/*.j2","data/*"]
 
 [tool.ruff]
 line-length = 100
