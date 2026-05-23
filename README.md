@@ -53,7 +53,7 @@ npm install -g @anthropic-ai/claude-code
 claude login
 
 # 2. Install morning-brief
-git clone https://github.com/PATIL-Abhishek/morning-brief.git
+git clone https://github.com/abhishekpatil32/morning-brief.git
 cd morning-brief
 python3 -m venv .venv
 source .venv/bin/activate
