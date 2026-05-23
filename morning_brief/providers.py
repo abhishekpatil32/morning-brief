@@ -34,12 +34,20 @@ def run_anthropic_api(cfg: Config, prompt: str) -> str:
 
     client = Anthropic(api_key=cfg.env.anthropic_api_key)
 
-    response = client.messages.create(
-        model=cfg.model,
-        max_tokens=4096,
-        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 15}],
-        messages=[{"role": "user", "content": prompt}],
-    )
+    kwargs = {
+        "model": cfg.model,
+        "max_tokens": 4096,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+
+    # In direct-source mode, candidates already came from arXiv/PubMed/RSS.
+    # Do not invoke model-side web search, because it may introduce unverified items.
+    if getattr(cfg.sources, "mode", "llm") != "direct":
+        kwargs["tools"] = [
+            {"type": "web_search_20250305", "name": "web_search", "max_uses": 15}
+        ]
+
+    response = client.messages.create(**kwargs)
 
     parts: list[str] = []
     for block in response.content:

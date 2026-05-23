@@ -28,6 +28,7 @@ model: claude-sonnet-4-6
 runtime:
   timeout_seconds: 600
 
+
 # ----- The topic of the digest -----
 topic:
   name: "AI x Neuroscience"
