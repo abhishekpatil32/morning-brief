@@ -12,10 +12,8 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 import yaml
-
 
 CONFIG_SEARCH_PATHS = [
     Path.cwd() / "config.yaml",
@@ -61,7 +59,7 @@ class EmailConfig:
 @dataclass
 class EnvConfig:
     """Values pulled from .env (or the surrounding environment)."""
-    anthropic_api_key: Optional[str] = None
+    anthropic_api_key: str | None = None
     smtp_server: str = ""
     smtp_port: int = 587
     email_sender: str = ""
@@ -87,7 +85,7 @@ class Config:
         return p if p.is_absolute() else (self.config_dir / p)
 
 
-def resolve_config_path(explicit: Optional[Path]) -> Path:
+def resolve_config_path(explicit: Path | None) -> Path:
     if explicit:
         if not explicit.exists():
             raise FileNotFoundError(f"Config file not found: {explicit}")
@@ -113,7 +111,7 @@ def load_env_file(env_path: Path) -> None:
         os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
-def load_config(explicit: Optional[Path] = None, require_email: bool = True) -> Config:
+def load_config(explicit: Path | None = None, require_email: bool = True) -> Config:
     config_path = resolve_config_path(explicit)
     config_dir = config_path.parent
     load_env_file(config_dir / ".env")
