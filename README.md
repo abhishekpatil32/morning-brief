@@ -1,6 +1,6 @@
 # morning-brief
 
-> A configurable daily research digest, delivered to your inbox by Claude.
+> A local-first AI research/news briefing tool from topics you define.
 
 `morning-brief` reads a YAML config describing what you care about, asks Claude
 to search the web for the most significant recent articles on that topic, and
@@ -202,6 +202,33 @@ All commands accept `--config PATH` to override the default config location.
    as an alternative MIME part.
 5. **Record** — every URL in the digest is appended to `seen.txt` so it's
    excluded from future runs.
+
+
+## Safety and privacy
+
+- Your `.env`, `config.yaml`, and `seen.txt` stay local.
+- Your topic description and recent seen URLs may be sent to the selected LLM provider.
+- Do not paste API keys, Gmail app passwords, or `.env` contents into public issues.
+- For unattended scheduled use, prefer `backend: api`.
+- Claude Code support is experimental.
+
+## Limitations
+
+- v0.1 depends on LLM-based search, so results may miss relevant articles.
+- Publication dates and article relevance should be manually verified for critical work.
+- Deduplication is currently URL-based, with basic arXiv version normalization.
+- This is a discovery assistant, not a replacement for systematic literature review.
+
+## Roadmap
+
+- [ ] Direct arXiv source mode
+- [ ] Direct PubMed source mode
+- [ ] SQLite digest history
+- [ ] Markdown export
+- [ ] Notion export
+- [ ] Gemini/OpenAI/Ollama provider abstraction
+- [ ] Better DOI/title-based deduplication
+
 
 ## Contributing
 
