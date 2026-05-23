@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "morning-brief"
+version = "0.1.0"
+description = "A configurable daily research digest delivered to your inbox, powered by Claude."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+authors = [
+    { name = "Abhishek Patil" },
+]
+keywords = ["claude", "anthropic", "research", "digest", "newsletter", "ai", "neuroscience", "arxiv"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications :: Email",
+    "Topic :: Scientific/Engineering",
+]
+
+dependencies = [
+    "anthropic>=0.40.0",
+    "pyyaml>=6.0",
+    "jinja2>=3.1",
+    "click>=8.1",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/abhishek-patil/morning-brief"
+Repository = "https://github.com/abhishek-patil/morning-brief"
+Issues = "https://github.com/abhishek-patil/morning-brief/issues"
+
+[project.scripts]
+morning-brief = "morning_brief.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["morning_brief*"]
+
+[tool.setuptools.package-data]
+morning_brief = ["templates/*.j2"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B"]
+ignore = ["E501"]

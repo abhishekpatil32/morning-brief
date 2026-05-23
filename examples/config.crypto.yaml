@@ -1,0 +1,37 @@
+backend: api
+model: claude-sonnet-4-6
+
+topic:
+  name: "Crypto & Web3"
+  description: |
+    Significant developments in cryptocurrency, blockchain protocols, DeFi,
+    stablecoin regulation, and major exchange or institutional activity.
+    Skip speculative price commentary and influencer content.
+  include_areas:
+    - "Protocol launches, upgrades, and security incidents"
+    - "Stablecoin regulation and central bank digital currency policy"
+    - "Institutional adoption and ETF activity"
+    - "DeFi total-value-locked shifts and protocol exploits"
+    - "Layer-2 scaling and zero-knowledge developments"
+  sources: |
+    CoinDesk, The Block, Bloomberg, Reuters, official protocol blogs,
+    SEC and Treasury announcements, Vitalik's blog, a16z crypto.
+
+output:
+  num_articles: 5
+  recency_days: 7
+  summary_sentences: "3"
+
+filters:
+  exclude_blogs: false
+  prefer_peer_reviewed: false
+  language: "English"
+
+state:
+  seen_file: "seen.txt"
+  inject_recent: 500
+
+email:
+  subject: "{topic_name} Brief -- {date}"
+  tagline: "Daily Market Brief"
+  footer: "morning-brief · This is not financial advice"

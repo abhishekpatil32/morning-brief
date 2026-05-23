@@ -1,0 +1,65 @@
+# morning-brief configuration
+# ----------------------------
+# Copy this file to `config.yaml` and edit. The CLI looks for config.yaml in
+# the current directory, then ~/.config/morning-brief/config.yaml.
+
+# ----- How morning-brief talks to Claude -----
+# "api"         -- uses the Anthropic API directly (requires ANTHROPIC_API_KEY)
+# "claude-code" -- shells out to the `claude` CLI you have installed locally
+backend: api
+
+# Model identifier. Used by both backends.
+# Common choices: claude-sonnet-4-6, claude-opus-4-7, claude-haiku-4-5
+model: claude-sonnet-4-6
+
+# ----- The topic of the digest -----
+topic:
+  name: "AI x Neuroscience"
+
+  description: |
+    Articles and preprints at the intersection of AI/ML and neuroscience.
+    Both ingredients must be present in every paper -- pure-AI work and
+    pure-neuroscience work should be skipped.
+
+  # Bulleted list of areas of interest. Used to guide the search.
+  include_areas:
+    - "Deep learning for EEG, fMRI, MEG, iEEG, or other neural signal analysis"
+    - "Brain-computer interfaces, neural decoding, neural signal reconstruction"
+    - "Foundation models or LLMs trained on or applied to neural data"
+    - "AI-driven analysis of brain disorders (depression, autism, Alzheimers)"
+    - "Brain-inspired AI architectures or learning rules"
+    - "LLMs as models of language processing in the brain"
+    - "Mechanistic interpretability informed by neuroscience"
+
+  # Free-text guidance on which sources Claude should prioritize.
+  sources: |
+    arXiv (cs.LG, cs.AI, q-bio.NC, eess.SP), PubMed, bioRxiv,
+    Nature Neuroscience, NeuroImage, eLife, and similar peer-reviewed venues.
+
+# ----- What the digest looks like -----
+output:
+  num_articles: 5
+  recency_days: 14
+  summary_sentences: "3-4"
+
+# ----- Filters Claude is asked to apply -----
+filters:
+  exclude_blogs: true
+  prefer_peer_reviewed: false
+  language: "English"
+
+# ----- Where dedup state is kept -----
+# Relative paths are resolved from the config file's directory.
+state:
+  seen_file: "seen.txt"
+  # How many recent URLs to inject into the prompt as "do not pick these"
+  inject_recent: 500
+
+# ----- Email rendering -----
+email:
+  # Subject line. Available variables: {topic_name}, {date}
+  subject: "{topic_name} Digest -- {date}"
+  # Header tagline shown above the title in the HTML email
+  tagline: "Daily Research Brief"
+  # Footer line below the entries
+  footer: "Curated by Claude · Powered by morning-brief"

@@ -1,0 +1,36 @@
+backend: claude-code
+model: claude-sonnet-4-6
+
+topic:
+  name: "Climate Science & Policy"
+  description: |
+    Peer-reviewed climate science, IPCC-related developments, and major
+    policy moves in carbon pricing, energy transition, and adaptation.
+  include_areas:
+    - "Climate modeling and observation studies"
+    - "Carbon capture, removal, and geoengineering research"
+    - "Energy transition policy and grid-scale renewables"
+    - "Adaptation, resilience, and climate finance"
+    - "Tipping points, attribution science, and extreme events"
+  sources: |
+    Nature, Science, Nature Climate Change, PNAS, Earth System Dynamics,
+    IPCC and IEA reports, Carbon Brief, government climate policy bulletins.
+
+output:
+  num_articles: 5
+  recency_days: 14
+  summary_sentences: "3-4"
+
+filters:
+  exclude_blogs: true
+  prefer_peer_reviewed: true
+  language: "English"
+
+state:
+  seen_file: "seen.txt"
+  inject_recent: 500
+
+email:
+  subject: "{topic_name} -- {date}"
+  tagline: "Weekly Science Brief"
+  footer: "morning-brief"
