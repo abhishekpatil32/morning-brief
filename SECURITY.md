@@ -11,6 +11,9 @@ Do not post secrets, API keys, Gmail app passwords, `.env` contents, or private 
 `morning-brief` reads credentials from environment variables or a local `.env` file:
 
 - `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
+- `OPENAI_BASE_URL`
+- `OLLAMA_BASE_URL`
 - `EMAIL_SENDER`
 - `EMAIL_APP_PASSWORD`
 - `EMAIL_RECIPIENT`
