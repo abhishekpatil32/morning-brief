@@ -45,9 +45,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/abhishek-patil/morning-brief"
-Repository = "https://github.com/abhishek-patil/morning-brief"
-Issues = "https://github.com/abhishek-patil/morning-brief/issues"
+Homepage = "https://github.com/abhishekpatil32/morning-brief"
+Repository = "https://github.com/abhishekpatil32/morning-brief"
+Issues = "https://github.com/abhishekpatil32/morning-brief/issues"
 
 [project.scripts]
 morning-brief = "morning_brief.cli:main"
