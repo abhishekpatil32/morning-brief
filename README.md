@@ -1,6 +1,6 @@
 # morning-brief
 
-> A configurable daily research digest, delivered to your inbox by Claude.
+> A local-first AI research/news briefing tool from topics you define.
 
 `morning-brief` reads a YAML config describing what you care about, asks Claude
 to search the web for the most significant recent articles on that topic, and
@@ -36,7 +36,7 @@ coffee.
 ## Features
 
 - **Topic-agnostic** — write a YAML config, get a daily digest on anything
-- **Two backends** — talk to Claude via the [Anthropic API](https://docs.claude.com) or the [Claude Code CLI](https://docs.claude.com/en/docs/claude-code/overview)
+- **Provider-aware** — supports Anthropic, OpenAI-compatible APIs, Ollama, and Claude Code
 - **Persistent dedup** — papers you've already seen are never resent
 - **Clean HTML email** — proper typography, clickable links, mobile-friendly
 - **Plain text fallback** — for terminal-based mail clients
@@ -76,6 +76,7 @@ A minimal `config.yaml`:
 
 ```yaml
 backend: api                          # or "claude-code"
+provider: anthropic                    # anthropic, openai-compatible, or ollama
 model: claude-sonnet-4-6
 
 topic:
@@ -104,8 +105,15 @@ See [`config.example.yaml`](config.example.yaml) for the full schema and
 `config.yaml`:
 
 ```env
-# Required if backend = "api"
+# Required if provider = "anthropic"
 ANTHROPIC_API_KEY=sk-ant-...
+
+# Required if provider = "openai-compatible"
+OPENAI_API_KEY=sk-...
+OPENAI_BASE_URL=https://api.openai.com/v1
+
+# Optional for local Ollama
+OLLAMA_BASE_URL=http://localhost:11434
 
 # Required for email delivery (Gmail shown; other providers in .env.example)
 SMTP_SERVER=smtp.gmail.com
@@ -203,6 +211,33 @@ All commands accept `--config PATH` to override the default config location.
 5. **Record** — every URL in the digest is appended to `seen.txt` so it's
    excluded from future runs.
 
+
+## Safety and privacy
+
+- Your `.env`, `config.yaml`, and `seen.txt` stay local.
+- Your topic description and recent seen URLs may be sent to the selected LLM provider.
+- Do not paste API keys, Gmail app passwords, or `.env` contents into public issues.
+- For unattended scheduled use, prefer `backend: api`.
+- Claude Code support is experimental.
+
+## Limitations
+
+- v0.1 depends on LLM-based search, so results may miss relevant articles.
+- Publication dates and article relevance should be manually verified for critical work.
+- Deduplication is currently URL-based, with basic arXiv version normalization.
+- This is a discovery assistant, not a replacement for systematic literature review.
+
+## Roadmap
+
+- [ ] Direct arXiv source mode
+- [ ] Direct PubMed source mode
+- [ ] SQLite digest history
+- [ ] Markdown export
+- [ ] Notion export
+- [ ] Direct arXiv/PubMed/RSS retrieval mode
+- [ ] Better DOI/title-based deduplication
+
+
 ## Contributing
 
 PRs welcome — see [`docs/contributing.md`](docs/contributing.md). Particularly
@@ -211,7 +246,7 @@ useful contributions:
 - New email backends (SendGrid, AWS SES, Mailgun, Postmark)
 - New scheduling docs for Windows Task Scheduler
 - More example configs for different domains
-- A simple test suite (this project has none yet)
+- More tests for provider adapters, SMTP, CLI behavior, and HTML output
 
 ## License
 

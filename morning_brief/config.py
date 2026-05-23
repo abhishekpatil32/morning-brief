@@ -1,26 +1,29 @@
 """Config + environment loading.
 
-Resolves config.yaml from (in order):
-  1. Path passed on the CLI with --config
-  2. ./config.yaml in the current working directory
-  3. ~/.config/morning-brief/config.yaml
+Resolves config.yaml from, in order:
+
+1. Path passed on the CLI with --config
+2. ./config.yaml in the current working directory
+3. ~/.config/morning-brief/config.yaml
 
 .env is loaded from the directory containing the chosen config.yaml.
 """
+
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 import yaml
-
 
 CONFIG_SEARCH_PATHS = [
     Path.cwd() / "config.yaml",
     Path.home() / ".config" / "morning-brief" / "config.yaml",
 ]
+
+VALID_BACKENDS = {"api", "claude-code"}
+VALID_PROVIDERS = {"anthropic", "openai-compatible", "ollama", "claude-code"}
 
 
 @dataclass
@@ -55,13 +58,23 @@ class StateConfig:
 class EmailConfig:
     subject: str = "{topic_name} Digest -- {date}"
     tagline: str = "Daily Research Brief"
-    footer: str = "Curated by Claude · Powered by morning-brief"
+    footer: str = "Curated by AI · Powered by morning-brief"
 
 
 @dataclass
 class EnvConfig:
-    """Values pulled from .env (or the surrounding environment)."""
-    anthropic_api_key: Optional[str] = None
+    """Values pulled from .env or surrounding environment."""
+
+    anthropic_api_key: str | None = None
+
+    # Generic OpenAI-compatible provider settings.
+    # Works with OpenAI and many providers that expose /v1/chat/completions.
+    openai_api_key: str | None = None
+    openai_base_url: str = "https://api.openai.com/v1"
+
+    # Local Ollama.
+    ollama_base_url: str = "http://localhost:11434"
+
     smtp_server: str = ""
     smtp_port: int = 587
     email_sender: str = ""
@@ -72,6 +85,7 @@ class EnvConfig:
 @dataclass
 class Config:
     backend: str
+    provider: str
     model: str
     topic: TopicConfig
     output: OutputConfig
@@ -81,56 +95,77 @@ class Config:
     env: EnvConfig
     config_path: Path
     config_dir: Path
+    runtime_timeout_seconds: int = 600
 
     def seen_path(self) -> Path:
-        p = Path(self.state.seen_file)
-        return p if p.is_absolute() else (self.config_dir / p)
+        path = Path(self.state.seen_file)
+        return path if path.is_absolute() else self.config_dir / path
 
 
-def resolve_config_path(explicit: Optional[Path]) -> Path:
+def resolve_config_path(explicit: Path | None) -> Path:
     if explicit:
         if not explicit.exists():
             raise FileNotFoundError(f"Config file not found: {explicit}")
         return explicit.resolve()
+
     for candidate in CONFIG_SEARCH_PATHS:
         if candidate.exists():
             return candidate.resolve()
+
     raise FileNotFoundError(
         "No config.yaml found. Run `morning-brief init` or pass --config PATH.\n"
-        f"Searched: {', '.join(str(p) for p in CONFIG_SEARCH_PATHS)}"
+        f"Searched: {', '.join(str(path) for path in CONFIG_SEARCH_PATHS)}"
     )
 
 
 def load_env_file(env_path: Path) -> None:
-    """Parse a .env file and merge into os.environ (without overwriting existing values)."""
+    """Parse a .env file and merge into os.environ without overwriting existing values."""
     if not env_path.exists():
         return
+
     for line in env_path.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
-        k, v = line.split("=", 1)
-        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
-def load_config(explicit: Optional[Path] = None) -> Config:
+def load_config(explicit: Path | None = None, require_email: bool = True) -> Config:
     config_path = resolve_config_path(explicit)
     config_dir = config_path.parent
+
     load_env_file(config_dir / ".env")
 
-    with open(config_path) as f:
-        raw = yaml.safe_load(f) or {}
+    with open(config_path) as file:
+        raw = yaml.safe_load(file) or {}
 
     backend = raw.get("backend", "api")
-    if backend not in ("api", "claude-code"):
-        raise ValueError(f"backend must be 'api' or 'claude-code', got: {backend}")
+    if backend not in VALID_BACKENDS:
+        raise ValueError(f"backend must be one of {sorted(VALID_BACKENDS)}, got: {backend}")
+
+    provider = raw.get("provider")
+    if backend == "claude-code":
+        provider = "claude-code"
+    else:
+        provider = provider or "anthropic"
+
+    if provider not in VALID_PROVIDERS:
+        raise ValueError(f"provider must be one of {sorted(VALID_PROVIDERS)}, got: {provider}")
+
+    if backend == "api" and provider == "claude-code":
+        raise ValueError("provider=claude-code requires backend=claude-code")
 
     topic_raw = raw.get("topic", {})
     if not topic_raw.get("name") or not topic_raw.get("description"):
         raise ValueError("config.yaml must define topic.name and topic.description")
 
+    runtime_raw = raw.get("runtime") or {}
+
     cfg = Config(
         backend=backend,
+        provider=provider,
         model=raw.get("model", "claude-sonnet-4-6"),
         topic=TopicConfig(
             name=topic_raw["name"],
@@ -144,6 +179,9 @@ def load_config(explicit: Optional[Path] = None) -> Config:
         email=EmailConfig(**(raw.get("email") or {})),
         env=EnvConfig(
             anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY"),
+            openai_api_key=os.environ.get("OPENAI_API_KEY"),
+            openai_base_url=os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+            ollama_base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434"),
             smtp_server=os.environ.get("SMTP_SERVER", "smtp.gmail.com"),
             smtp_port=int(os.environ.get("SMTP_PORT", "587")),
             email_sender=os.environ.get("EMAIL_SENDER", ""),
@@ -152,23 +190,34 @@ def load_config(explicit: Optional[Path] = None) -> Config:
         ),
         config_path=config_path,
         config_dir=config_dir,
+        runtime_timeout_seconds=int(runtime_raw.get("timeout_seconds", 600)),
     )
 
-    # Validate the relevant env vars are present
     missing = []
-    if cfg.backend == "api" and not cfg.env.anthropic_api_key:
-        missing.append("ANTHROPIC_API_KEY (required because backend=api)")
-    for key, val in [
-        ("EMAIL_SENDER", cfg.env.email_sender),
-        ("EMAIL_APP_PASSWORD", cfg.env.email_app_password),
-        ("EMAIL_RECIPIENT", cfg.env.email_recipient),
-    ]:
-        if not val:
-            missing.append(key)
+
+    if cfg.backend == "api":
+        if cfg.provider == "anthropic" and not cfg.env.anthropic_api_key:
+            missing.append("ANTHROPIC_API_KEY required because provider=anthropic")
+
+        if cfg.provider == "openai-compatible" and not cfg.env.openai_api_key:
+            missing.append("OPENAI_API_KEY required because provider=openai-compatible")
+
+        # Ollama usually runs locally and does not require an API key.
+
+    if require_email:
+        for key, value in [
+            ("EMAIL_SENDER", cfg.env.email_sender),
+            ("EMAIL_APP_PASSWORD", cfg.env.email_app_password),
+            ("EMAIL_RECIPIENT", cfg.env.email_recipient),
+        ]:
+            if not value:
+                missing.append(key)
+
     if missing:
         raise ValueError(
-            "Missing required environment variables:\n  - "
-            + "\n  - ".join(missing)
-            + f"\n\nAdd them to {config_dir / '.env'} (copy from .env.example)."
+            "Missing required environment variables:\n - "
+            + "\n - ".join(missing)
+            + f"\n\nAdd them to {config_dir / '.env'}."
         )
+
     return cfg

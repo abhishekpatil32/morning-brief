@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import shutil
 import sys
+from importlib.resources import as_file, files
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
@@ -22,14 +22,20 @@ from . import __version__
 from .config import CONFIG_SEARCH_PATHS, Config, load_config
 from .core import generate_digest, parse_digest, urls_in
 from .dedup import load_seen, record
+from .doctor import run_doctor
 from .email_sender import send
 
 console = Console()
 
+def _copy_package_data_file(resource_name: str, target: Path) -> None:
+    """Copy a packaged template/config file to a user-visible path."""
+    resource = files("morning_brief").joinpath("data", resource_name)
+    with as_file(resource) as src:
+        shutil.copy(src, target)
 
-def _load(config_path: Optional[Path]) -> Config:
+def _load(config_path: Path | None, require_email: bool = True) -> Config:
     try:
-        return load_config(config_path)
+        return load_config(config_path, require_email=require_email)
     except (FileNotFoundError, ValueError) as e:
         console.print(f"[red]Error:[/red] {e}")
         sys.exit(1)
@@ -38,13 +44,13 @@ def _load(config_path: Optional[Path]) -> Config:
 @click.group()
 @click.version_option(__version__, prog_name="morning-brief")
 def main():
-    """A configurable daily research digest, delivered to your inbox by Claude."""
+    """A local-first AI research/news briefing tool from topics you define."""
 
 
 @main.command()
 @click.option("--target", type=click.Path(path_type=Path), default=None,
               help="Where to install config (default: ./config.yaml).")
-def init(target: Optional[Path]) -> None:
+def init(target: Path | None) -> None:
     """Copy config.example.yaml and .env.example into place for editing."""
     target_config = target or Path.cwd() / "config.yaml"
     target_env = target_config.parent / ".env"
@@ -60,13 +66,13 @@ def init(target: Optional[Path]) -> None:
     if target_config.exists():
         console.print(f"[yellow]Skipping[/yellow] {target_config} (already exists).")
     else:
-        shutil.copy(src_config, target_config)
+        _copy_package_data_file("config.example.yaml", target_config)
         console.print(f"[green]Created[/green] {target_config}")
 
     if target_env.exists():
         console.print(f"[yellow]Skipping[/yellow] {target_env} (already exists).")
     else:
-        shutil.copy(src_env, target_env)
+        _copy_package_data_file("env.example", target_env)
         target_env.chmod(0o600)
         console.print(f"[green]Created[/green] {target_env} (mode 600)")
 
@@ -84,13 +90,13 @@ def init(target: Optional[Path]) -> None:
 @click.option("--config", "config_path", type=click.Path(exists=True, path_type=Path),
               help="Path to config.yaml.")
 @click.option("--dry-run", is_flag=True, help="Generate digest but don't send or record.")
-def run(config_path: Optional[Path], dry_run: bool) -> None:
+def run(config_path: Path | None, dry_run: bool) -> None:
     """Generate today's digest and email it."""
     cfg = _load(config_path)
     console.print(f"[dim]Using config:[/dim] {cfg.config_path}")
     console.print(f"[dim]Backend:[/dim] {cfg.backend}  [dim]Model:[/dim] {cfg.model}")
 
-    console.print("[bold]Generating digest...[/bold] (this can take 1-3 minutes)")
+    console.print("[bold]Generating digest...[/bold] (this can take a few minutes)")
     digest = generate_digest(cfg)
     if not digest.strip():
         console.print("[red]Error:[/red] Claude returned an empty digest.")
@@ -118,7 +124,7 @@ def run(config_path: Optional[Path], dry_run: bool) -> None:
 
 @main.command()
 @click.option("--config", "config_path", type=click.Path(exists=True, path_type=Path))
-def preview(config_path: Optional[Path]) -> None:
+def preview(config_path: Path | None) -> None:
     """Generate the digest and print it to stdout (no email, no dedup recording)."""
     cfg = _load(config_path)
     digest = generate_digest(cfg)
@@ -127,7 +133,7 @@ def preview(config_path: Optional[Path]) -> None:
 
 @main.command("test-email")
 @click.option("--config", "config_path", type=click.Path(exists=True, path_type=Path))
-def test_email(config_path: Optional[Path]) -> None:
+def test_email(config_path: Path | None) -> None:
     """Send a small SMTP test message to confirm email credentials work."""
     cfg = _load(config_path)
     fake_digest = (
@@ -151,7 +157,7 @@ def test_email(config_path: Optional[Path]) -> None:
 @main.command()
 @click.option("--config", "config_path", type=click.Path(exists=True, path_type=Path))
 @click.option("--limit", type=int, default=20, help="How many recent URLs to show.")
-def seen(config_path: Optional[Path], limit: int) -> None:
+def seen(config_path: Path | None, limit: int) -> None:
     """List the URLs in seen.txt (most recent last)."""
     cfg = _load(config_path)
     urls = load_seen(cfg.seen_path())
@@ -170,6 +176,14 @@ def where() -> None:
     for p in CONFIG_SEARCH_PATHS:
         marker = "[green]exists[/green]" if p.exists() else "[dim]not found[/dim]"
         console.print(f"  {p}  {marker}")
+
+
+
+@main.command()
+@click.option("--config", "config_path", type=click.Path(exists=True, path_type=Path))
+def doctor(config_path: Path | None) -> None:
+    """Check config, credentials, backend, and local setup."""
+    raise SystemExit(run_doctor(config_path))
 
 
 if __name__ == "__main__":
