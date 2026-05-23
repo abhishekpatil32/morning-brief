@@ -48,6 +48,8 @@ coffee.
 # 1. Install
 git clone https://github.com/abhishek-patil/morning-brief.git
 cd morning-brief
+python3 -m venv .venv
+source .venv/bin/activate  
 pip install -e .
 
 # 2. Set up config in your home directory (or wherever you like)
