@@ -36,7 +36,7 @@ coffee.
 ## Features
 
 - **Topic-agnostic** — write a YAML config, get a daily digest on anything
-- **Two backends** — talk to Claude via the [Anthropic API](https://docs.claude.com) or the [Claude Code CLI](https://docs.claude.com/en/docs/claude-code/overview)
+- **Provider-aware** — supports Anthropic, OpenAI-compatible APIs, Ollama, and Claude Code
 - **Persistent dedup** — papers you've already seen are never resent
 - **Clean HTML email** — proper typography, clickable links, mobile-friendly
 - **Plain text fallback** — for terminal-based mail clients
@@ -76,6 +76,7 @@ A minimal `config.yaml`:
 
 ```yaml
 backend: api                          # or "claude-code"
+provider: anthropic                    # anthropic, openai-compatible, or ollama
 model: claude-sonnet-4-6
 
 topic:
@@ -104,8 +105,15 @@ See [`config.example.yaml`](config.example.yaml) for the full schema and
 `config.yaml`:
 
 ```env
-# Required if backend = "api"
+# Required if provider = "anthropic"
 ANTHROPIC_API_KEY=sk-ant-...
+
+# Required if provider = "openai-compatible"
+OPENAI_API_KEY=sk-...
+OPENAI_BASE_URL=https://api.openai.com/v1
+
+# Optional for local Ollama
+OLLAMA_BASE_URL=http://localhost:11434
 
 # Required for email delivery (Gmail shown; other providers in .env.example)
 SMTP_SERVER=smtp.gmail.com
@@ -226,7 +234,7 @@ All commands accept `--config PATH` to override the default config location.
 - [ ] SQLite digest history
 - [ ] Markdown export
 - [ ] Notion export
-- [ ] Gemini/OpenAI/Ollama provider abstraction
+- [ ] Direct arXiv/PubMed/RSS retrieval mode
 - [ ] Better DOI/title-based deduplication
 
 
@@ -238,7 +246,7 @@ useful contributions:
 - New email backends (SendGrid, AWS SES, Mailgun, Postmark)
 - New scheduling docs for Windows Task Scheduler
 - More example configs for different domains
-- A simple test suite (this project has none yet)
+- More tests for provider adapters, SMTP, CLI behavior, and HTML output
 
 ## License
 
